@@ -12,7 +12,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { username } });
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      status: true,
+      password: true,
+    },
+  });
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -24,5 +33,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
 
-  return NextResponse.json({ id: user.id, username: user.username });
+  return NextResponse.json({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    status: user.status,
+  });
 }

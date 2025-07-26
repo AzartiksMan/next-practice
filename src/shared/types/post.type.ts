@@ -7,5 +7,6 @@ export interface PostType {
   user: {
     id: number;
     username: string;
+    email: string;
   };
 }

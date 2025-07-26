@@ -1,5 +1,14 @@
 "use client";
+
 import type { UserData } from "@/shared/types/userData.type";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { useForm } from "react-hook-form";
+import {
+  registerSchema,
+  type RegisterFormValues,
+} from "@/shared/validators/registerSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 
 export default function RegisterForm({
@@ -9,72 +18,96 @@ export default function RegisterForm({
   onSuccess: (user: UserData) => void;
   onBack: () => void;
 }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
+
+  const onSubmit = async (data: RegisterFormValues) => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(data),
       });
-      const data = await res.json();
+
+      const result = await res.json();
+
       if (!res.ok) {
-        setError(data.error || "Registration error");
-      } else {
-        onSuccess({ id: data.id, username: data.username });
+        if (result.error?.includes("Username")) {
+          setError("username", { type: "manual", message: result.error });
+        } else if (result.error?.includes("email")) {
+          setError("email", { type: "manual", message: result.error });
+        } else {
+          setError("root", { type: "server", message: result.error });
+        }
+        return;
       }
-    } catch {
-      setError("Network error");
-    } finally {
-      setLoading(false);
+
+      onSuccess(result);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Registration error:", err.message);
+      } else {
+        console.error("Unknown registration error", err);
+      }
     }
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-3 p-4 border rounded w-80"
     >
-      <input
-        className="border rounded px-3 py-2"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        required
-      />
-      <input
-        className="border rounded px-3 py-2"
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <div className="flex gap-2">
-        <button
-          className="bg-blue-600 text-white px-3 py-2 rounded disabled:bg-gray-300"
-          type="submit"
-          disabled={loading}
-        >
-          {loading ? "Registering..." : "Register"}
-        </button>
-        <button
+      <div>
+        <Input placeholder="Username" {...register("username")} />
+        {errors.username && (
+          <p className="text-red-600 text-sm">{errors.username.message}</p>
+        )}
+      </div>
+      <div>
+        <Input placeholder="Email" type="email" {...register("email")} />
+        {errors.email && (
+          <p className="text-red-600 text-sm">{errors.email.message}</p>
+        )}
+      </div>
+      <div className="relative">
+        <Input
+          placeholder="Password"
+          type={showPassword ? "text" : "password"}
+          className="pr-14"
+          {...register("password")}
+        />
+        <Button
           type="button"
-          className="bg-gray-300 text-gray-700 px-3 py-2 rounded"
+          variant="ghost"
+          size="sm"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-xs h-auto px-2"
+          onClick={() => setShowPassword((prev) => !prev)}
+        >
+          {showPassword ? "Hide" : "Show"}
+        </Button>
+        {errors.password && (
+          <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Registering..." : "Register"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
           onClick={onBack}
-          disabled={loading}
+          disabled={isSubmitting}
         >
           Назад
-        </button>
+        </Button>
       </div>
-      {error && <div className="text-red-600">{error}</div>}
     </form>
   );
 }

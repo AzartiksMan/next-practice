@@ -1,1 +1,6 @@
-export type UserData = { id: number; username: string };
+export interface UserData {
+  id: number;
+  username: string;
+  email: string;
+  status?: string;
+};

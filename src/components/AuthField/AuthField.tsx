@@ -11,25 +11,20 @@ export function AuthField({ onAuth }: { onAuth: (user: UserData) => void }) {
   return (
     <div className="flex flex-col items-center gap-y-5">
       {mode === "buttons" && (
-        <>
-          <div className="text-gray-600 mb-2">
-            To draw post, login or register
-          </div>
-          <div className="flex gap-4">
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-              onClick={() => setMode("login")}
-            >
-              Login
-            </button>
-            <button
-              className="bg-gray-500 text-white px-4 py-2 rounded"
-              onClick={() => setMode("register")}
-            >
-              Register
-            </button>
-          </div>
-        </>
+        <div className="flex gap-4">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            onClick={() => setMode("login")}
+          >
+            Login
+          </button>
+          <button
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+            onClick={() => setMode("register")}
+          >
+            Register
+          </button>
+        </div>
       )}
 
       {mode === "login" && (

@@ -28,7 +28,12 @@ export default function LoginForm({
       if (!res.ok) {
         setError(data.error || "Login error");
       } else {
-        onSuccess({ id: data.id, username: data.username });
+        onSuccess({
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          status: data.status,
+        });
       }
     } catch {
       setError("Network error");
