@@ -1,6 +1,24 @@
 "use client";
+
 import type { UserData } from "@/shared/types/userData.type";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import {
+  type LoginFormValues,
+  loginSchema,
+} from "@/shared/validators/loginSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm({
   onSuccess,
@@ -9,77 +27,121 @@ export default function LoginForm({
   onSuccess: (user: UserData) => void;
   onBack: () => void;
 }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(data),
       });
-      const data = await res.json();
+
+      const result = await res.json();
+
       if (!res.ok) {
-        setError(data.error || "Login error");
-      } else {
-        onSuccess({
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          status: data.status,
-        });
+        const message = result.error || "Login error";
+
+        if (message.toLowerCase().includes("username")) {
+          form.setError("username", { type: "manual", message });
+        } else if (message.toLowerCase().includes("password")) {
+          form.setError("password", { type: "manual", message });
+        } else {
+          form.setError("root", { type: "server", message });
+        }
+
+        return;
       }
+
+      onSuccess(result);
     } catch {
-      setError("Network error");
-    } finally {
-      setLoading(false);
+      form.setError("root", { type: "server", message: "Network error" });
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-3 p-4 border rounded w-80"
-    >
-      <input
-        className="border rounded px-3 py-2"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        required
-      />
-      <input
-        className="border rounded px-3 py-2"
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <div className="flex gap-2">
-        <button
-          className="bg-blue-600 text-white px-3 py-2 rounded disabled:bg-gray-300"
-          type="submit"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-        <button
-          type="button"
-          className="bg-gray-300 text-gray-700 px-3 py-2 rounded"
-          onClick={onBack}
-          disabled={loading}
-        >
-          Назад
-        </button>
-      </div>
-      {error && <div className="text-red-600">{error}</div>}
-    </form>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-80 space-y-4 border p-6 rounded-md"
+      >
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="Username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    className="pr-14"
+                    placeholder="Password"
+                    {...field}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.formState.errors.root && (
+          <p className="text-red-600 text-sm">
+            {form.formState.errors.root.message}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Logging in..." : "Login"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onBack}
+            disabled={form.formState.isSubmitting}
+          >
+            Go back
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

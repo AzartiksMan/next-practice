@@ -3,6 +3,7 @@ import type { PostType } from "@/shared/types/post.type";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import Image from "next/image";
+import { Heart, MessageCircle } from "lucide-react";
 
 interface Props {
   post: PostType;
@@ -34,32 +35,39 @@ export function Post({ post, setPosts }: Props) {
           height={80}
           className="absolute -bottom-10 left-4 rounded-full object-cover shadow-sm border-4 border-white"
         />
-        <Button
-          type="button"
-          className="absolute right-4 bottom-[-16px] bg-black text-white text-sm font-semibold px-4 py-1 rounded-full"
-          onClick={() => handleDelete(post.id)}
-        >
-          Delete
-        </Button>
+        <div className="absolute right-4 bottom-0 translate-y-1">
+          <Link href={PAGES.USER(post.user.username)}>
+            <h2 className="font-bold text-2xl text-black hover:underline leading-tight">
+              @{post.user.username}
+            </h2>
+          </Link>
+        </div>
       </div>
 
       <div className="pt-12 px-4 pb-4 bg-white rounded-b-xl">
-        <div className="flex items-center gap-1">
-          <Link href={PAGES.USER(post.user.username)}>
-            <h2 className="font-bold text-lg">{post.user.username}</h2>
-          </Link>
+        <h2 className="font-bold text-2xl">{post.title}</h2>
+
+        <div className="h-20 overflow-hidden pt-2">
+          <p className="text-sm text-gray-700 leading-snug line-clamp-3">
+            {post.text}
+          </p>
         </div>
-        <p className="text-gray-500">{post.user.email}</p>
 
-        <p className="mt-2 text-sm text-gray-700 leading-snug">{post.text}</p>
+        <div className="flex justify-between mt-3">
+          <div className="flex gap-4 text-sm font-medium text-gray-600">
+            <div className="flex items-center gap-1">
+              <span className="text-black">0</span>
+              <Heart className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-black">0</span>
+              <MessageCircle className="w-4 h-4" />
+            </div>
+          </div>
 
-        <div className="flex gap-4 mt-3 text-sm font-medium text-gray-600">
-          <div>
-            <span className="text-black">0</span> Likes
-          </div>
-          <div>
-            <span className="text-black">0</span> Comments
-          </div>
+          <Button type="button" onClick={() => handleDelete(post.id)}>
+            Delete
+          </Button>
         </div>
 
         <div className="mt-2 text-sm text-gray-500 flex items-center gap-1">

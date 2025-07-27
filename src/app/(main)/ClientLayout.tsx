@@ -20,7 +20,7 @@ export default function ClientLayout({
     if (hasHydrated && !user) {
       router.replace("/auth");
     }
-  }, [hasHydrated, user]);
+  }, [hasHydrated, user, router]);
 
   if (!hasHydrated || !user) {
     return (
