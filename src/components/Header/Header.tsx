@@ -1,11 +1,13 @@
 "use client";
 
 import { PAGES } from "@/app/config/pages.config";
+import { useUserStore } from "@/store/userStore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function Header() {
   const pathname = usePathname();
+  const currentUser = useUserStore((state) => state.user?.username);
 
   const linkClass = (href: string) =>
     `px-3 py-2 rounded-md transition-colors duration-200
@@ -23,9 +25,14 @@ export function Header() {
       <Link className={linkClass(PAGES.ABOUT)} href={PAGES.ABOUT}>
         About
       </Link>
-      <Link className={linkClass(PAGES.PROFILE)} href={PAGES.PROFILE}>
-        Profile
-      </Link>
+      {currentUser && (
+        <Link
+          className={linkClass(PAGES.USER(currentUser))}
+          href={PAGES.USER(currentUser)}
+        >
+          Profile
+        </Link>
+      )}
     </header>
   );
 }

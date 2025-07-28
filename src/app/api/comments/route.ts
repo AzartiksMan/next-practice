@@ -1,14 +1,33 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function POST(req: NextRequest) {
   try {
-    const posts = await prisma.comment.findMany({
-      include: { user: true },
+    const { text, postId, userId } = await req.json();
+
+    if (!text || !postId || !userId) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        text,
+        postId: Number(postId),
+        userId: Number(userId),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
     });
-    return NextResponse.json(posts);
+
+    return NextResponse.json(comment);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Error" }, { status: 500 });
+    console.error("Failed to create comment:", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

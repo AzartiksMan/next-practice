@@ -14,28 +14,43 @@ datasource db {
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  text      String
-  userId    Int
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  id         Int       @id @default(autoincrement())
+  title      String
+  text       String
+  userId     Int
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+  likes      Like[]
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  username   String   @unique
-  email      String   @unique
+  id         Int       @id @default(autoincrement())
+  username   String    @unique
+  email      String    @unique
   password   String
   status     String?
   posts      Post[]
   comments   Comment[]
+  likes    Like[]
 }
 
 model Comment {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   userId     Int
+  postId     Int
   text       String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post       Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id     Int   @id @default(autoincrement())
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  post   Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+
+  @@unique([userId, postId], name: "userId_postId")
 }

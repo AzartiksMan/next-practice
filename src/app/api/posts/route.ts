@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -24,7 +24,14 @@ export async function POST(request: NextRequest) {
         text,
         userId,
       },
-      include: { user: true },
+      include: {
+        user: {
+          select: { id: true, username: true, email: true },
+        },
+        _count: {
+          select: { likes: true, comments: true },
+        },
+      },
     });
 
     return NextResponse.json(post, { status: 201 });
@@ -38,8 +45,12 @@ export async function GET() {
   try {
     const posts = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
-      include: { user: true },
+      include: {
+        user: { select: { id: true, username: true } },
+        _count: { select: { comments: true, likes: true } },
+      },
     });
+
     return NextResponse.json(posts);
   } catch (error) {
     console.error(error);

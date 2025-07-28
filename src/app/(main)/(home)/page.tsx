@@ -19,9 +19,11 @@ export default function Home() {
     fetch("/api/posts")
       .then((res) => res.json())
       .then((data) => setPosts(data))
-      .catch(() => setError("Smth went wrong"));
+      .catch(() => setError("Smth went wrong"))
   }, []);
 
+
+  console.log(posts)
   return (
     <div className="mt-10 flex items-center justify-center">
       <EmojiRain />
