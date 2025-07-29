@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Form } from "@/components/Form";
 import type { PostType } from "@/shared/types/post.type";
 import { useUserStore } from "@/store/userStore";
 import { PostArea } from "@/components/PostArea";
-import { EmojiRain } from "@/components/EmojiRain";
+import { CreatePostForm } from "@/components/CreatePostForm";
 
 export default function Home() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [posts, setPosts] = useState<PostType[]>([]);
 
   const user = useUserStore((state) => state.user);
@@ -19,14 +16,12 @@ export default function Home() {
     fetch("/api/posts")
       .then((res) => res.json())
       .then((data) => setPosts(data))
-      .catch(() => setError("Smth went wrong"))
+      .catch(() => console.log("Smth went wrong"));
   }, []);
 
-
-  console.log(posts)
+  console.log(posts);
   return (
     <div className="mt-10 flex items-center justify-center">
-      <EmojiRain />
 
       <div
         className="
@@ -51,12 +46,7 @@ export default function Home() {
                 Выйти
               </button>
             </div>
-            <Form
-              userId={user!.id}
-              loading={loading}
-              error={error}
-              setLoading={setLoading}
-              setError={setError}
+            <CreatePostForm
               setPosts={setPosts}
             />
           </div>

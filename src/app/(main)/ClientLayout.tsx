@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/navigation";
 import { useHasHydrated } from "@/hooks/useHasHydrated";
+import { EmojiRain } from "@/components/EmojiRain";
 
 export default function ClientLayout({
   children,
@@ -25,6 +26,7 @@ export default function ClientLayout({
   if (!hasHydrated || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-500">
+        <EmojiRain />
         Перенаправляем...
       </div>
     );
@@ -33,6 +35,7 @@ export default function ClientLayout({
   return (
     <>
       <Header />
+      <EmojiRain />
       <main className="flex-1">{children}</main>
       <Footer />
     </>

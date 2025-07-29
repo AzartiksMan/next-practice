@@ -73,6 +73,7 @@ export default function RegisterForm({
     <>
       <Form {...form}>
         <form
+          noValidate
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-80 space-y-4 border p-6 rounded-md"
         >
