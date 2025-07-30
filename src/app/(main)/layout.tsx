@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "../globals.css";
-import ClientLayout from "./ClientLayout";
 import { Providers } from "../providers/providers";
+import { Header } from "@/components/Header";
+import { EmojiRain } from "@/components/EmojiRain";
+import { Footer } from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +27,10 @@ export default function RootLayout({
         className={`${geistSans.variable} antialiased min-h-screen flex flex-col`}
       >
         <Providers>
-          <ClientLayout>{children}</ClientLayout>
+          <Header />
+          <EmojiRain />
+          <main className="flex-1">{children}</main>
+          <Footer />
         </Providers>
       </body>
     </html>

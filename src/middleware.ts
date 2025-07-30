@@ -7,9 +7,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: [
-    "/main/:path*",
-    "/user/:path*",
-    "/settings/:path*",
-  ],
+  matcher: ["/((?!auth|favicon.ico|_next|api).*)"],
 };
