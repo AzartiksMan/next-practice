@@ -1,6 +1,5 @@
 "use client";
 
-import type { UserData } from "@/shared/types/userData.type";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -19,14 +18,10 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
-export default function RegisterForm({
-  onSuccess,
-  onBack,
-}: {
-  onSuccess: (user: UserData) => void;
-  onBack: () => void;
-}) {
+export default function RegisterForm({ onBack }: { onBack: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<RegisterFormValues>({
@@ -37,6 +32,8 @@ export default function RegisterForm({
       password: "",
     },
   });
+
+  const router = useRouter();
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
@@ -59,7 +56,18 @@ export default function RegisterForm({
         return;
       }
 
-      onSuccess(result);
+      const loginRes = await signIn("credentials", {
+        redirect: false,
+        username: data.username,
+        password: data.password,
+      });
+
+      if (loginRes?.error) {
+        form.setError("root", { type: "server", message: loginRes.error });
+        return;
+      }
+
+      router.push("/");
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.error("Registration error:", err.message);
@@ -70,93 +78,95 @@ export default function RegisterForm({
   };
 
   return (
-    <>
-      <Form {...form}>
-        <form
-          noValidate
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="w-80 space-y-4 border p-6 rounded-md"
-        >
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input placeholder="Username" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="Email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      className="pr-14"
-                      placeholder="Password"
-                      {...field}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs h-auto px-2"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      disabled={form.formState.isSubmitting}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {form.formState.errors.root && (
-            <p className="text-red-600 text-sm">
-              {form.formState.errors.root.message}
-            </p>
+    <Form {...form}>
+      <form
+        noValidate
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-80 space-y-4 border p-6 rounded-md"
+      >
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="Username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
+        />
 
-          <div className="flex gap-2">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Registering..." : "Register"}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onBack}
-              disabled={form.formState.isSubmitting}
-            >
-              Go back
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="Email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    className="pr-14"
+                    placeholder="Password"
+                    {...field}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs h-auto px-2"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.formState.errors.root && (
+          <p className="text-red-600 text-sm">
+            {form.formState.errors.root.message}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Registering..." : "Register"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onBack}
+            disabled={form.formState.isSubmitting}
+          >
+            Go back
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

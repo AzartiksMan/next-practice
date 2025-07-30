@@ -18,14 +18,15 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { useUserStore } from "@/store/userStore";
+import { useSession } from "next-auth/react";
 
 interface Props {
   setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
 }
 
 export const CreatePostForm: React.FC<Props> = ({ setPosts }) => {
-  const userId = useUserStore((state) => state.user?.id);
+  const { data: session } = useSession();
+  const userId = session?.user.id;
 
   const form = useForm<EditPostValues>({
     resolver: zodResolver(editPostSchema),

@@ -1,6 +1,5 @@
 "use client";
 
-import type { UserData } from "@/shared/types/userData.type";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -19,14 +18,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
-export default function LoginForm({
-  onSuccess,
-  onBack,
-}: {
-  onSuccess: (user: UserData) => void;
-  onBack: () => void;
-}) {
+export default function LoginForm({ onBack }: { onBack: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -37,18 +32,19 @@ export default function LoginForm({
     },
   });
 
+  const router = useRouter();
+
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+
+      console.log("Submitting data:", data);
+      const res = await signIn("credentials", {
+        redirect: false,
+        ...data,
       });
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        const message = result.error || "Login error";
+      if (res?.error) {
+        const message = res.error || "Login error";
 
         if (message.toLowerCase().includes("username")) {
           form.setError("username", { type: "manual", message });
@@ -61,7 +57,7 @@ export default function LoginForm({
         return;
       }
 
-      onSuccess(result);
+      router.push("/");
     } catch {
       form.setError("root", { type: "server", message: "Network error" });
     }

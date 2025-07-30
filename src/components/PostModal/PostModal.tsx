@@ -7,7 +7,6 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useUserStore } from "@/store/userStore";
 import {
   Form,
   FormControl,
@@ -22,16 +21,8 @@ import { editPostSchema } from "@/shared/validators/editPostSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type z from "zod";
 import { ADMIN_USERS } from "@/app/config/constants";
-
-type Comment = {
-  id: number;
-  text: string;
-  createdAt: string;
-  user: {
-    id: number;
-    username: string;
-  };
-};
+import type { Comment } from "@/shared/types/comment.type";
+import { useSession } from "next-auth/react";
 
 export function PostModal({
   post,
@@ -48,10 +39,13 @@ export function PostModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [newComment, setNewComment] = useState("");
-  const userId = useUserStore((state) => state.user?.id);
-
   const [isEditing, setIsEditing] = useState(false);
-  const userName = useUserStore((state) => state.user?.username);
+
+  const { data: session } = useSession();
+
+  const userId = session?.user.id;
+  const userName = session?.user.username;
+
   const isAdmin = ADMIN_USERS.includes(userName ?? "");
   const canEdit = isAdmin || userId === post.user.id;
 

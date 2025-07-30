@@ -3,31 +3,29 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useEffect } from "react";
-import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/navigation";
-import { useHasHydrated } from "@/hooks/useHasHydrated";
 import { EmojiRain } from "@/components/EmojiRain";
+import { useSession } from "next-auth/react";
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = useUserStore((state) => state.user);
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const hasHydrated = useHasHydrated();
 
   useEffect(() => {
-    if (hasHydrated && !user) {
+    if (status === "unauthenticated") {
       router.replace("/auth");
     }
-  }, [hasHydrated, user, router]);
+  }, [router, status]);
 
-  if (!hasHydrated || !user) {
+  if (status === "loading" || status === "unauthenticated") {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-500">
         <EmojiRain />
-        Перенаправляем...
+        {status === "loading" ? "Loading session..." : "Redirecting..."}
       </div>
     );
   }

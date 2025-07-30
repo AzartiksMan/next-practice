@@ -3,9 +3,9 @@
 import type { PostType } from "@/shared/types/post.type";
 import { Post } from "../Post/Post";
 import { useEffect, useState } from "react";
-import { PostModal } from "../PostModal/PostModal";
-import { useUserStore } from "@/store/userStore";
 import { Skeleton } from "../ui/skeleton";
+import { useSession } from "next-auth/react";
+import { PostModal } from "../PostModal";
 
 interface Props {
   posts: PostType[];
@@ -25,9 +25,12 @@ export function PostArea({
   const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
 
-  const userId = useUserStore((state) => state.user?.id);
+  const { data: session } = useSession();
+  const userId = session?.user.id;
 
   useEffect(() => {
+    if (!userId) return;
+
     fetch(`/api/likes?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => setLikedPosts(data.likedPostIds || []))

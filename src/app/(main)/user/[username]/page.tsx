@@ -3,7 +3,7 @@
 import { PostArea } from "@/components/PostArea";
 import type { PostType } from "@/shared/types/post.type";
 import type { UserFullData } from "@/shared/types/userFullData";
-import { useUserStore } from "@/store/userStore";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,7 +16,9 @@ export default function Profile() {
   const [showOnlyLiked, setShowOnlyLiked] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const currentUsername = useUserStore((state) => state.user?.username);
+  const { data: session } = useSession();
+
+  const currentUsername = session?.user?.username;
 
   useEffect(() => {
     setIsLoading(true);

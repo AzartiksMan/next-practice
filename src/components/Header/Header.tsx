@@ -1,15 +1,15 @@
 "use client";
 
 import { PAGES } from "@/app/config/pages.config";
-import { useUserStore } from "@/store/userStore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "../ui/button";
+import { signOut, useSession } from "next-auth/react";
 
 export function Header() {
   const pathname = usePathname();
-  const currentUser = useUserStore((state) => state.user?.username);
-  const logout = useUserStore((state) => state.logout);
+  const { data: session } = useSession();
+  const currentUser = session?.user?.username;
 
   const linkClass = (href: string) =>
     `px-3 py-2 rounded-md transition-colors duration-200
@@ -37,8 +37,10 @@ export function Header() {
           >
             Logged in as <b>{currentUser}</b>
           </Link>
-
-          <Button type="button" onClick={logout}>
+          <Button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/auth" })}
+          >
             Log out
           </Button>
         </div>

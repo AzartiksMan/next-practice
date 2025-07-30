@@ -2,17 +2,11 @@
 
 import { useState } from "react";
 import RegisterForm from "../RegisterForm/RegisterForm";
-import type { UserData } from "@/shared/types/userData.type";
 import LoginForm from "../LoginForm/LoginForm";
 import { Button } from "../ui/button";
 
-export function AuthField({ onAuth }: { onAuth: (user: UserData) => void }) {
+export function AuthField() {
   const [mode, setMode] = useState<"buttons" | "register" | "login">("buttons");
-
-  const handleSuccess = (user: UserData) => {
-    onAuth(user);
-    setMode("buttons");
-  };
 
   return (
     <div className="flex flex-col items-center gap-y-5">
@@ -31,18 +25,10 @@ export function AuthField({ onAuth }: { onAuth: (user: UserData) => void }) {
         </div>
       )}
 
-      {mode === "login" && (
-        <LoginForm
-          onSuccess={handleSuccess}
-          onBack={() => setMode("buttons")}
-        />
-      )}
+      {mode === "login" && <LoginForm onBack={() => setMode("buttons")} />}
 
       {mode === "register" && (
-        <RegisterForm
-          onSuccess={handleSuccess}
-          onBack={() => setMode("buttons")}
-        />
+        <RegisterForm onBack={() => setMode("buttons")} />
       )}
     </div>
   );

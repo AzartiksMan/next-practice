@@ -6,13 +6,13 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { Heart, MessageCircle } from "lucide-react";
-import { useUserStore } from "@/store/userStore";
 import { useState } from "react";
 import { ADMIN_USERS } from "@/app/config/constants";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocale from "dayjs/plugin/updateLocale";
+import { useSession } from "next-auth/react";
 
 interface Props {
   post: PostType;
@@ -36,9 +36,10 @@ export function Post({
   const isLikedByMe = likedPosts.includes(post.id);
   const [isLiking, setIsLiking] = useState(false);
 
-  const user = useUserStore((state) => state.user);
-  const userId = user?.id;
-  const userName = user?.username;
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  const userName = session?.user?.username;
+
   const isAdmin = ADMIN_USERS.includes(userName ?? "");
 
   dayjs.extend(relativeTime);
