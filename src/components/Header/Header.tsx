@@ -4,10 +4,12 @@ import { PAGES } from "@/app/config/pages.config";
 import { useUserStore } from "@/store/userStore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "../ui/button";
 
 export function Header() {
   const pathname = usePathname();
   const currentUser = useUserStore((state) => state.user?.username);
+  const logout = useUserStore((state) => state.logout);
 
   const linkClass = (href: string) =>
     `px-3 py-2 rounded-md transition-colors duration-200
@@ -18,20 +20,28 @@ export function Header() {
     }`;
 
   return (
-    <header className="flex border-b border-gray-200 gap-x-4 h-14 items-center px-8 bg-white">
-      <Link className={linkClass(PAGES.HOME)} href={PAGES.HOME}>
-        Home
-      </Link>
-      <Link className={linkClass(PAGES.ABOUT)} href={PAGES.ABOUT}>
-        About
-      </Link>
-      {currentUser && (
-        <Link
-          className={linkClass(PAGES.USER(currentUser))}
-          href={PAGES.USER(currentUser)}
-        >
-          Profile
+    <header className="flex border-b border-gray-200 h-14 px-8 bg-white justify-between">
+      <div className="flex items-center gap-x-4">
+        <Link className={linkClass(PAGES.HOME)} href={PAGES.HOME}>
+          Home
         </Link>
+        <Link className={linkClass(PAGES.ABOUT)} href={PAGES.ABOUT}>
+          About
+        </Link>
+      </div>
+      {currentUser && (
+        <div className="flex items-center gap-4">
+          <Link
+            className={linkClass(PAGES.USER(currentUser))}
+            href={PAGES.USER(currentUser)}
+          >
+            Logged in as <b>{currentUser}</b>
+          </Link>
+
+          <Button type="button" onClick={logout}>
+            Log out
+          </Button>
+        </div>
       )}
     </header>
   );

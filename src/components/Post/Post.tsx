@@ -10,6 +10,10 @@ import { useUserStore } from "@/store/userStore";
 import { useState } from "react";
 import { ADMIN_USERS } from "@/app/config/constants";
 
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import updateLocale from "dayjs/plugin/updateLocale";
+
 interface Props {
   post: PostType;
   setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
@@ -36,6 +40,29 @@ export function Post({
   const userId = user?.id;
   const userName = user?.username;
   const isAdmin = ADMIN_USERS.includes(userName ?? "");
+
+  dayjs.extend(relativeTime);
+  dayjs.extend(updateLocale);
+
+  dayjs.updateLocale("en", {
+    relativeTime: {
+      future: "in %s",
+      past: "%s ago",
+      s: "%ds",
+      m: "1m",
+      mm: "%dm",
+      h: "1h",
+      hh: "%dh",
+      d: "1d",
+      dd: "%dd",
+      M: "1mo",
+      MM: "%dmo",
+      y: "1y",
+      yy: "%dy",
+    },
+  });
+
+  const timeAgo = dayjs().to(dayjs(post.createdAt));
 
   const handleDelete = async (id: number) => {
     try {
@@ -96,8 +123,8 @@ export function Post({
   };
 
   return (
-    <div className="w-70 rounded-xl overflow-hidden shadow-lg bg-[#c2d9dd]">
-      <div className="bg-[#00acee] h-24 relative">
+    <div className="rounded-xl overflow-hidden shadow-lg bg-[#c2d9dd]">
+      <div className="bg-[#00acee] h-16 relative">
         <Image
           src="/placeholder-avatar.png"
           alt="Avatar"
@@ -105,19 +132,22 @@ export function Post({
           height={80}
           className="absolute -bottom-10 left-4 rounded-full object-cover shadow-sm border-4 border-white"
         />
-        <div className="absolute right-4 bottom-0 translate-y-1">
+        <div className="absolute left-28 bottom-0 translate-y-1">
           <Link href={PAGES.USER(post.user.username)}>
             <h2 className="font-bold text-2xl text-black hover:underline leading-tight">
-              @{post.user.username}
+              {post.user.username}
             </h2>
           </Link>
+        </div>
+        <div className="absolute right-2 bottom-0 translate-y-1">
+          <p className="font-bold">{timeAgo}</p>
         </div>
       </div>
 
       <div className="pt-12 px-4 pb-4 bg-white rounded-b-xl">
         <h2 className="font-bold text-2xl">{post.title}</h2>
 
-        <div className="h-20 overflow-hidden pt-2">
+        <div className="pt-2">
           <p className="text-sm text-gray-700 leading-snug line-clamp-3">
             {post.text}
           </p>
@@ -149,29 +179,24 @@ export function Post({
             </div>
           </div>
 
-          <Button
-            type="button"
-            className="cursor-pointer"
-            onClick={() => onOpenModal()}
-          >
-            View details
-          </Button>
-
-          {(isAdmin || userId === post.user.id) && (
+          <div className="flex gap-x-4">
+            {(isAdmin || userId === post.user.id) && (
+              <Button
+                type="button"
+                className="cursor-pointer"
+                onClick={() => handleDelete(post.id)}
+              >
+                Delete
+              </Button>
+            )}
             <Button
               type="button"
               className="cursor-pointer"
-              onClick={() => handleDelete(post.id)}
+              onClick={() => onOpenModal()}
             >
-              Delete
+              View details
             </Button>
-          )}
-        </div>
-
-        <div className="mt-2 text-sm text-gray-500 flex items-center gap-1">
-          <p className="text-xs text-gray-400">
-            {new Date(post.createdAt).toLocaleString()}
-          </p>
+          </div>
         </div>
       </div>
     </div>

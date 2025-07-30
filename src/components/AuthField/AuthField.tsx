@@ -9,6 +9,11 @@ import { Button } from "../ui/button";
 export function AuthField({ onAuth }: { onAuth: (user: UserData) => void }) {
   const [mode, setMode] = useState<"buttons" | "register" | "login">("buttons");
 
+  const handleSuccess = (user: UserData) => {
+    onAuth(user);
+    setMode("buttons");
+  };
+
   return (
     <div className="flex flex-col items-center gap-y-5">
       {mode === "buttons" && (
@@ -20,10 +25,7 @@ export function AuthField({ onAuth }: { onAuth: (user: UserData) => void }) {
           >
             Login
           </Button>
-          <Button
-            type="button"
-            onClick={() => setMode("register")}
-          >
+          <Button type="button" onClick={() => setMode("register")}>
             Register
           </Button>
         </div>
@@ -31,20 +33,14 @@ export function AuthField({ onAuth }: { onAuth: (user: UserData) => void }) {
 
       {mode === "login" && (
         <LoginForm
-          onSuccess={(user) => {
-            onAuth(user);
-            setMode("buttons");
-          }}
+          onSuccess={handleSuccess}
           onBack={() => setMode("buttons")}
         />
       )}
 
       {mode === "register" && (
         <RegisterForm
-          onSuccess={(user) => {
-            onAuth(user);
-            setMode("buttons");
-          }}
+          onSuccess={handleSuccess}
           onBack={() => setMode("buttons")}
         />
       )}

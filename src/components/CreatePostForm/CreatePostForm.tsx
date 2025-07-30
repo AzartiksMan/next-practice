@@ -62,7 +62,8 @@ export const CreatePostForm: React.FC<Props> = ({ setPosts }) => {
   };
 
   return (
-    <div className="flex flex-col w-70">
+    <div className="flex flex-col w-80 bg-white rounded-xl p-6 shadow-md self-start">
+      <h2 className="text-xl font-semibold mb-4">What&apos;s on your mind?</h2>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -91,7 +92,7 @@ export const CreatePostForm: React.FC<Props> = ({ setPosts }) => {
                 <FormControl>
                   <Textarea
                     placeholder="Text"
-                    className="h-100 min-h-[200px] resize-none"
+                    className="resize-none min-h-20 max-h-126 overflow-auto"
                     {...field}
                   />
                 </FormControl>

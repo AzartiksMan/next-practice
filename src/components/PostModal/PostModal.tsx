@@ -256,7 +256,7 @@ export function PostModal({
               </div>
               <div
                 className="space-y-3 text-sm text-gray-800 shadow-inner rounded-md p-3 bg-gray-50 h-80 overflow-y-auto"
-                style={{ scrollbarGutter: "stable" }}
+                style={{ scrollbarGutter: "stable", scrollBehavior: "smooth" }}
               >
                 {loading && <p>Loading comments...</p>}
                 {!loading && error && (
