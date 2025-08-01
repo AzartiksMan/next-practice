@@ -235,6 +235,7 @@ export default function Profile() {
                     <Button type="submit" className="text-blue-500">
                       Upload avatar
                     </Button>
+                    
                     <Button
                       type="button"
                       variant="ghost"
