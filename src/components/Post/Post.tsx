@@ -127,11 +127,11 @@ export function Post({
     <div className="rounded-xl overflow-hidden shadow-lg bg-[#c2d9dd]">
       <div className="bg-[#00acee] h-16 relative">
         <Image
-          src="/placeholder-avatar.png"
+          src={post.user.image || "/placeholder-avatar.png"}
           alt="Avatar"
           width={80}
           height={80}
-          className="absolute -bottom-10 left-4 rounded-full object-cover shadow-sm border-4 border-white"
+          className="absolute -bottom-10 left-4 rounded-full object-cover shadow-sm border-4 border-white bg-white"
         />
         <div className="absolute left-28 bottom-0 translate-y-1">
           <Link href={PAGES.USER(post.user.username)}>

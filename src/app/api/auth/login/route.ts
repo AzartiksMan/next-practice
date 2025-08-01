@@ -19,7 +19,9 @@ export async function POST(request: Request) {
       username: true,
       email: true,
       status: true,
+      image: true,
       password: true,
+      imagePublicId: true,
     },
   });
 
@@ -38,5 +40,7 @@ export async function POST(request: Request) {
     username: user.username,
     email: user.email,
     status: user.status,
+    image: user.image,
+    imagePublicId: user.imagePublicId,
   });
 }

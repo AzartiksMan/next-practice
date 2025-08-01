@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user: {
-          select: { id: true, username: true, email: true },
+          select: { id: true, username: true, email: true, image: true },
         },
         _count: {
           select: { likes: true, comments: true },
@@ -46,7 +46,7 @@ export async function GET() {
     const posts = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, image: true } },
         _count: { select: { comments: true, likes: true } },
       },
     });
