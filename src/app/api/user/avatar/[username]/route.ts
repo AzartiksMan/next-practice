@@ -10,12 +10,12 @@ cloudinary.config({
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
   try {
+    const { username } = await context.params;
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const username = params.username;
     const shouldDeleteAvatar = formData.get("delete") === "true";
 
     const existingUser = await prisma.user.findUnique({

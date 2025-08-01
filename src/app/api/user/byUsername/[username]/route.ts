@@ -43,10 +43,10 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
   try {
-    const { username } = params;
+    const { username } = await context.params;
     const body = await req.json();
     const { status } = body;
 
