@@ -1,4 +1,6 @@
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -6,6 +8,12 @@ export async function GET(
   context: { params: Promise<{ userId: string }> }
 ) {
   const { userId } = await context.params;
+  const session = await getServerSession(authOptions);
+  const currentUserId = session?.user?.id;
+
+  if (!currentUserId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const likedPosts = await prisma.post.findMany({
@@ -21,13 +29,24 @@ export async function GET(
         user: {
           select: { id: true, username: true, image: true },
         },
+        likes: {
+          select: { userId: true },
+        },
         _count: {
           select: { likes: true, comments: true },
         },
       },
     });
 
-    return NextResponse.json(likedPosts);
+    const postsWithLikeStatus = likedPosts.map((post) => ({
+      ...post,
+      isLikedByMe: currentUserId
+        ? post.likes.some((like) => like.userId === currentUserId)
+        : false,
+      likes: undefined,
+    }));
+
+    return NextResponse.json(postsWithLikeStatus);
   } catch (error) {
     console.error("Failed to fetch liked posts:", error);
     return NextResponse.json(

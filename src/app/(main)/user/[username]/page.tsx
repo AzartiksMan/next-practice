@@ -2,12 +2,12 @@
 
 import { PostArea } from "@/components/PostArea";
 import { Button } from "@/components/ui/button";
-import type { PostType } from "@/shared/types/post.type";
 import type { UserFullData } from "@/shared/types/userFullData";
 import {
   statusSchema,
   type StatusFormData,
 } from "@/shared/validators/statusSchema";
+import { usePostStore } from "@/store/postStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -19,10 +19,10 @@ import { useForm } from "react-hook-form";
 export default function Profile() {
   const { username } = useParams();
   const [user, setUser] = useState<UserFullData | null>(null);
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [likedPosts, setLikedPosts] = useState<PostType[]>([]);
+
+  const fetchUserPosts = usePostStore((state) => state.fetchUserPosts);
+
   const [showOnlyLiked, setShowOnlyLiked] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -32,45 +32,25 @@ export default function Profile() {
   const currentUsername = session?.user?.username;
 
   useEffect(() => {
-    setIsLoading(true);
-    const fetchUser = async () => {
+    const fetchData = async () => {
+
       try {
-        const res = await fetch(`/api/user/byUsername/${username}`);
-        const data = await res.json();
-        setUser(data);
-        if (data?.posts) {
-          setPosts(data.posts);
+        const userRes = await fetch(`/api/user/byUsername/${username}`);
+        const userData = await userRes.json();
+        setUser(userData);
+
+        if (userData?.id) {
+          fetchUserPosts(showOnlyLiked, userData.id);
         }
       } catch (err) {
-        console.error("Failed to fetch user:", err);
-      } finally {
-        setIsLoading(false);
+        console.error("Failed to fetch user/posts:", err);
       }
     };
 
-    if (username) fetchUser();
-  }, [username]);
-
-  const handleTogglePosts = async () => {
-    setShowOnlyLiked((prev) => !prev);
-
-    if (!likedPosts.length && user?.id) {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`/api/user/byId/${user.id}/likedPosts`);
-        const data = await res.json();
-
-        const othersLikedPosts = data.filter(
-          (post: PostType) => post.user.id !== user.id
-        );
-        setLikedPosts(othersLikedPosts);
-      } catch (err) {
-        console.error("Failed to fetch liked posts:", err);
-      } finally {
-        setIsLoading(false);
-      }
+    if (username) {
+      fetchData();
     }
-  };
+  }, [username, showOnlyLiked, fetchUserPosts]);
 
   const handleAvatarUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -181,6 +161,11 @@ export default function Profile() {
   };
   const isCurrentUser = username === currentUsername;
 
+  const tabs = [
+    { label: "User posts", value: false },
+    { label: "Liked posts", value: true },
+  ];
+
   return (
     <div className="mt-16 flex justify-center gap-x-10">
       <div className="bg-white shadow-lg rounded-xl p-6 self-start ">
@@ -235,7 +220,7 @@ export default function Profile() {
                     <Button type="submit" className="text-blue-500">
                       Upload avatar
                     </Button>
-                    
+
                     <Button
                       type="button"
                       variant="ghost"
@@ -325,37 +310,23 @@ export default function Profile() {
 
       <div className="flex flex-col bg-white p-4 rounded-xl shadow-md gap-y-3">
         <div className="flex bg-gray-100 rounded-md p-1 w-full text-sm font-medium">
-          <div
-            onClick={() => {
-              if (showOnlyLiked) handleTogglePosts();
-            }}
-            className={`w-1/2 py-2 px-4 cursor-pointer transition-all duration-200 ${
-              !showOnlyLiked
-                ? "bg-white text-black rounded-l-md shadow"
-                : "text-gray-500"
-            }`}
-          >
-            User posts
-          </div>
-          <div
-            onClick={() => {
-              if (!showOnlyLiked) handleTogglePosts();
-            }}
-            className={`w-1/2 py-2 px-4 cursor-pointer transition-all duration-200 ${
-              showOnlyLiked
-                ? "bg-white text-black rounded-r-md shadow"
-                : "text-gray-500"
-            }`}
-          >
-            Liked posts
-          </div>
+          {tabs.map((tab, i) => (
+            <div
+              key={tab.label}
+              onClick={() => setShowOnlyLiked(tab.value)}
+              className={`w-1/2 py-2 px-4 cursor-pointer transition-all duration-200 ${
+                showOnlyLiked === tab.value
+                  ? "bg-white text-black shadow"
+                  : "text-gray-500"
+              } ${i === 0 ? "rounded-l-md" : "rounded-r-md"}`}
+            >
+              {tab.label}
+            </div>
+          ))}
         </div>
         <PostArea
-          setPosts={showOnlyLiked ? setLikedPosts : setPosts}
-          posts={showOnlyLiked ? likedPosts : posts}
           showOnlyLiked={showOnlyLiked}
           isCurrentUser={isCurrentUser}
-          isLoading={isLoading}
         />
       </div>
     </div>

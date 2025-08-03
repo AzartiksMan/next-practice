@@ -6,122 +6,30 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { Heart, MessageCircle } from "lucide-react";
-import { useState } from "react";
-import { ADMIN_USERS } from "@/app/config/constants";
-
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import updateLocale from "dayjs/plugin/updateLocale";
-import { useSession } from "next-auth/react";
+import { getTimeAgo } from "@/utils/getTimeAgo";
+import type { Session } from "next-auth";
+import { usePostStore } from "@/store/postStore";
 
 interface Props {
   post: PostType;
-  setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
-  likedPosts: number[];
-  setLikedPosts: React.Dispatch<React.SetStateAction<number[]>>;
-  showOnlyLiked?: boolean;
-  isCurrentUser?: boolean;
-  onOpenModal: () => void;
+  onDelete: (id: number) => void;
+  onLikeToggle: (postId: number, isLikedByMe: boolean) => void;
+  isLiking: boolean;
+  session?: Session | null;
 }
 
 export function Post({
   post,
-  setPosts,
-  likedPosts,
-  setLikedPosts,
-  showOnlyLiked = false,
-  isCurrentUser = false,
-  onOpenModal,
+  onLikeToggle,
+  onDelete,
+  isLiking,
+  session,
 }: Props) {
-  const isLikedByMe = likedPosts.includes(post.id);
-  const [isLiking, setIsLiking] = useState(false);
+  const isLikedByMe = post.isLikedByMe;
 
-  const { data: session } = useSession();
   const userId = session?.user?.id;
-  const userName = session?.user?.username;
-
-  const isAdmin = ADMIN_USERS.includes(userName ?? "");
-
-  dayjs.extend(relativeTime);
-  dayjs.extend(updateLocale);
-
-  dayjs.updateLocale("en", {
-    relativeTime: {
-      future: "in %s",
-      past: "%s ago",
-      s: "%ds",
-      m: "1m",
-      mm: "%dm",
-      h: "1h",
-      hh: "%dh",
-      d: "1d",
-      dd: "%dd",
-      M: "1mo",
-      MM: "%dmo",
-      y: "1y",
-      yy: "%dy",
-    },
-  });
-
-  const timeAgo = dayjs().to(dayjs(post.createdAt));
-
-  const handleDelete = async (id: number) => {
-    try {
-      const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
-
-      if (!res.ok) {
-        throw new Error("Failed to delete");
-      }
-
-      setPosts((prev) => prev.filter((post) => post.id !== id));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleLikeToggle = async () => {
-    if (!userId || isLiking) return;
-
-    setIsLiking(true);
-
-    const method = isLikedByMe ? "DELETE" : "POST";
-
-    try {
-      const res = await fetch("/api/likes", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, postId: post.id }),
-      });
-
-      if (!res.ok) throw new Error("Like toggle failed");
-
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? {
-                ...p,
-                _count: {
-                  ...p._count,
-                  likes: p._count.likes + (isLikedByMe ? -1 : 1),
-                },
-              }
-            : p
-        )
-      );
-
-      setLikedPosts((prev) =>
-        isLikedByMe ? prev.filter((id) => id !== post.id) : [...prev, post.id]
-      );
-
-      if (showOnlyLiked && isLikedByMe && isCurrentUser) {
-        setPosts((prev) => prev.filter((p) => p.id !== post.id));
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLiking(false);
-    }
-  };
+  const isAdmin = session?.user?.role === "admin";
+  const setPostInModal = usePostStore((state) => state.setPostInModal);
 
   return (
     <div className="rounded-xl overflow-hidden shadow-lg bg-[#c2d9dd]">
@@ -141,7 +49,7 @@ export function Post({
           </Link>
         </div>
         <div className="absolute right-2 bottom-0 translate-y-1">
-          <p className="font-bold">{timeAgo}</p>
+          <p className="font-bold">{getTimeAgo(post.createdAt)}</p>
         </div>
       </div>
 
@@ -160,7 +68,7 @@ export function Post({
               className={`flex items-center gap-1 cursor-pointer ${
                 isLiking ? "pointer-events-none opacity-50" : ""
               }`}
-              onClick={handleLikeToggle}
+              onClick={() => onLikeToggle(post.id, isLikedByMe)}
             >
               <span className="text-black">{post._count.likes}</span>
               <Heart
@@ -173,7 +81,7 @@ export function Post({
             </div>
             <div
               className="flex items-center gap-1 cursor-pointer"
-              onClick={() => onOpenModal()}
+              onClick={() => setPostInModal(post)}
             >
               <span className="text-black">{post._count.comments}</span>
               <MessageCircle className="w-4 h-4" />
@@ -185,7 +93,7 @@ export function Post({
               <Button
                 type="button"
                 className="cursor-pointer"
-                onClick={() => handleDelete(post.id)}
+                onClick={() => onDelete(post.id)}
               >
                 Delete
               </Button>
@@ -193,7 +101,7 @@ export function Post({
             <Button
               type="button"
               className="cursor-pointer"
-              onClick={() => onOpenModal()}
+              onClick={() => setPostInModal(post)}
             >
               View details
             </Button>

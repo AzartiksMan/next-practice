@@ -4,6 +4,7 @@ export interface PostType {
   text: string;
   userId: number;
   createdAt: string;
+  isLikedByMe: boolean;
 
   _count: {
     comments: number;

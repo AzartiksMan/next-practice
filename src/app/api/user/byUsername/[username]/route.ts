@@ -10,20 +10,13 @@ export async function GET(
   try {
     const user = await prisma.user.findUnique({
       where: { username },
-      include: {
-        posts: {
-          orderBy: { createdAt: "desc" },
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                image: true,
-              },
-            },
-            _count: { select: { likes: true, comments: true } },
-          },
-        },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+        imagePublicId: true,
+        status: true,
       },
     });
 

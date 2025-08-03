@@ -1,31 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PostType } from "@/shared/types/post.type";
 import { PostArea } from "@/components/PostArea";
 import { CreatePostForm } from "@/components/CreatePostForm";
+import { usePostStore } from "@/store/postStore";
 
 export default function Home() {
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const fetchAllPosts = usePostStore((state) => state.fetchAllPosts);
+  const [showMostLiked, setShowMostLiked] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
+    fetchAllPosts(showMostLiked);
+  }, [showMostLiked, fetchAllPosts]);
 
-    fetch("/api/posts")
-      .then((res) => res.json())
-      .then((data) => setPosts(data))
-      .catch(() => console.log("Smth went wrong"))
-      .finally(() => setIsLoading(false));
-  }, []);
+
+  const tabs = [
+    { label: "Newest", value: false },
+    { label: "Top liked", value: true },
+  ];
 
   return (
     <div className="mt-16 flex justify-center gap-x-10">
-      <CreatePostForm setPosts={setPosts} />
+      <CreatePostForm />
 
       <div className="flex flex-col bg-white p-4 rounded-xl shadow-md gap-y-3">
-        <h1 className="text-2xl font-bold">Discover all posts</h1>
-        <PostArea posts={posts} setPosts={setPosts} isLoading={isLoading} />
+        <div className="flex bg-gray-100 rounded-md p-1 w-full text-sm font-medium">
+          {tabs.map((tab, i) => (
+            <div
+              key={tab.label}
+              onClick={() => setShowMostLiked(tab.value)}
+              className={`w-1/2 py-2 px-4 cursor-pointer transition-all duration-200 ${
+                showMostLiked === tab.value
+                  ? "bg-white text-black shadow"
+                  : "text-gray-500"
+              } ${i === 0 ? "rounded-l-md" : "rounded-r-md"}`}
+            >
+              {tab.label}
+            </div>
+          ))}
+        </div>
+        <PostArea />
       </div>
     </div>
   );

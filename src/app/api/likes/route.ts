@@ -1,29 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId");
-
-  if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
-  }
-
-  try {
-    const likes = await prisma.like.findMany({
-      where: { userId: Number(userId) },
-      select: { postId: true },
-    });
-
-    const likedPostIds = likes.map((like) => like.postId);
-
-    return NextResponse.json({ likedPostIds });
-  } catch (error) {
-    console.error("Failed to fetch liked posts:", error);
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
-  }
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { userId, postId } = await req.json();

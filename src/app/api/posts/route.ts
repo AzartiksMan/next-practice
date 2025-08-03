@@ -1,28 +1,29 @@
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, text, userId } = await request.json();
+    const session = await getServerSession(authOptions);
+    const currentUserId = session?.user?.id;
+    const { title, text } = await request.json();
 
-    if (!title || !text || !userId) {
+    if (!currentUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!title || !text) {
       return NextResponse.json(
-        { error: "Title, text and userId are required" },
+        { error: "Title and text are required" },
         { status: 400 }
       );
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const post = await prisma.post.create({
       data: {
         title,
         text,
-        userId,
+        userId: currentUserId,
       },
       include: {
         user: {
@@ -34,7 +35,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(post, { status: 201 });
+    return NextResponse.json(
+      {
+        ...post,
+        isLikedByMe: false,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Error" }, { status: 500 });
@@ -42,16 +49,30 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  const currentUserId = session?.user?.id;
+
   try {
     const posts = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
       include: {
         user: { select: { id: true, username: true, image: true } },
+        likes: {
+          select: { userId: true },
+        },
         _count: { select: { comments: true, likes: true } },
       },
     });
 
-    return NextResponse.json(posts);
+    const postsWithLikeStatus = posts.map((post) => ({
+      ...post,
+      isLikedByMe: currentUserId
+        ? post.likes.some((like) => like.userId === currentUserId)
+        : false,
+      likes: undefined,
+    }));
+
+    return NextResponse.json(postsWithLikeStatus);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Error" }, { status: 500 });

@@ -1,6 +1,5 @@
 "use client";
 
-import type { PostType } from "@/shared/types/post.type";
 import {
   editPostSchema,
   type EditPostValues,
@@ -19,12 +18,11 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useSession } from "next-auth/react";
+import { usePostStore } from "@/store/postStore";
 
-interface Props {
-  setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
-}
+export const CreatePostForm = () => {
+  const addPost = usePostStore((state) => state.addPost);
 
-export const CreatePostForm: React.FC<Props> = ({ setPosts }) => {
   const { data: session } = useSession();
   const userId = session?.user.id;
 
@@ -37,27 +35,20 @@ export const CreatePostForm: React.FC<Props> = ({ setPosts }) => {
   });
 
   const onSubmit = async (data: EditPostValues) => {
+    if (!userId) {
+      return;
+    }
+
     try {
-      const res = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, userId }),
-      });
-      if (res.status === 201) {
-        const newPost: PostType = await res.json();
-        setPosts((prev) => [newPost, ...prev]);
-        form.reset();
-      } else {
-        const err = await res.json();
-        form.setError("root", {
-          type: "server",
-          message: err?.error || "Unexpected server error",
-        });
-      }
-    } catch {
+      await addPost(data, userId);
+      form.reset();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong";
+
       form.setError("root", {
-        type: "network",
-        message: "Network error. Please try again.",
+        type: "server",
+        message,
       });
     }
   };

@@ -51,6 +51,15 @@ export async function PATCH(
         title: result.data.title,
         text: result.data.text,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(updatedPost, { status: 200 });
