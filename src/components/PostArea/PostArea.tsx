@@ -4,14 +4,14 @@ import { PostModal } from "../PostModal";
 import { useSession } from "next-auth/react";
 import { Post, PostSkeleton } from "@/components/Post";
 import { usePostStore } from "@/store/postStore";
+import { toast } from "sonner";
 
 interface Props {
   showOnlyLiked?: boolean;
   isCurrentUser?: boolean;
 }
 
-export function PostArea({ showOnlyLiked, isCurrentUser }: Props) {
-
+export function PostArea({ showOnlyLiked, isCurrentUser = false }: Props) {
   const likingPostIds = usePostStore((state) => state.likingPostIds);
   const isLoading = usePostStore((state) => state.isLoading);
   const posts = usePostStore((state) => state.posts);
@@ -25,6 +25,7 @@ export function PostArea({ showOnlyLiked, isCurrentUser }: Props) {
 
   const handleLikeToggle = (postId: number, isLikedByMe: boolean) => {
     if (!userId) {
+      toast.error("You must be logged in to like posts.");
       return;
     }
 
@@ -62,11 +63,7 @@ export function PostArea({ showOnlyLiked, isCurrentUser }: Props) {
         </div>
       </div>
 
-      {postInModal && (
-        <PostModal
-          session={session}
-        />
-      )}
+      {postInModal && <PostModal session={session} />}
     </div>
   );
 }

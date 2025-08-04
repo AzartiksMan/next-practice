@@ -25,22 +25,30 @@ export function Header() {
         <Link className={linkClass(PAGES.HOME)} href={PAGES.HOME}>
           Home
         </Link>
+        <Link className={linkClass(PAGES.POSTS)} href={PAGES.POSTS}>
+          Posts
+        </Link>
+        <Link className={linkClass(PAGES.USERS)} href={PAGES.USERS}>
+          Users
+        </Link>
         <Link className={linkClass(PAGES.ABOUT)} href={PAGES.ABOUT}>
           About
         </Link>
       </div>
-      {currentUser && (
+      {!session && (
         <div className="flex items-center gap-4">
-          <Link
-            className={linkClass(PAGES.USER(currentUser))}
-            href={PAGES.USER(currentUser)}
-          >
+          <Link href={PAGES.AUTH}>
+            <Button>Sign Up</Button>
+          </Link>
+        </div>
+      )}
+
+      {currentUser && session && (
+        <div className="flex items-center gap-4">
+          <Link className={linkClass(PAGES.PROFILE)} href={PAGES.PROFILE}>
             Logged in as <b>{currentUser}</b>
           </Link>
-          <Button
-            type="button"
-            onClick={() => signOut({ callbackUrl: "/auth" })}
-          >
+          <Button type="button" onClick={() => signOut()}>
             Log out
           </Button>
         </div>

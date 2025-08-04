@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   type LoginFormValues,
@@ -21,7 +21,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-export default function LoginForm({ onBack }: { onBack: () => void }) {
+interface Props {
+  onBack: () => void;
+}
+
+export const LoginForm: React.FC<Props> = ({ onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -36,7 +40,6 @@ export default function LoginForm({ onBack }: { onBack: () => void }) {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-
       console.log("Submitting data:", data);
       const res = await signIn("credentials", {
         redirect: false,
@@ -140,4 +143,4 @@ export default function LoginForm({ onBack }: { onBack: () => void }) {
       </form>
     </Form>
   );
-}
+};

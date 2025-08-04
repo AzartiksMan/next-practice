@@ -1,11 +1,3 @@
-"use client";
-
-import {
-  editPostSchema,
-  type EditPostValues,
-} from "@/shared/validators/editPostSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -17,14 +9,21 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { useSession } from "next-auth/react";
+import {
+  editPostSchema,
+  type EditPostValues,
+} from "@/shared/validators/editPostSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { usePostStore } from "@/store/postStore";
+import type React from "react";
 
-export const CreatePostForm = () => {
+interface Props {
+  userId: number;
+}
+
+export const CreatePostForm: React.FC<Props> = ({ userId }) => {
   const addPost = usePostStore((state) => state.addPost);
-
-  const { data: session } = useSession();
-  const userId = session?.user.id;
 
   const form = useForm<EditPostValues>({
     resolver: zodResolver(editPostSchema),
@@ -52,67 +51,64 @@ export const CreatePostForm = () => {
       });
     }
   };
-
+  
   return (
-    <div className="flex flex-col w-80 bg-white rounded-xl p-6 shadow-md self-start">
-      <h2 className="text-xl font-semibold mb-4">What&apos;s on your mind?</h2>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-y-5"
-        >
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="Title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="text"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Text</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Text"
-                    className="resize-none min-h-20 max-h-126 overflow-auto"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {form.formState.errors.root && (
-            <p className="text-red-600 text-sm">
-              {form.formState.errors.root.message}
-            </p>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col gap-y-5"
+      >
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
+        />
 
-          <div className="flex gap-2">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Saving" : "Add post"}
-            </Button>
-            <Button
-              type="button"
-              disabled={form.formState.isSubmitting}
-              onClick={() => form.reset()}
-            >
-              Clear
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+        <FormField
+          control={form.control}
+          name="text"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Text</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Text"
+                  className="resize-none min-h-20 max-h-126 overflow-auto"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.formState.errors.root && (
+          <p className="text-red-600 text-sm">
+            {form.formState.errors.root.message}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Saving" : "Add post"}
+          </Button>
+          <Button
+            type="button"
+            disabled={form.formState.isSubmitting}
+            onClick={() => form.reset()}
+          >
+            Clear
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };

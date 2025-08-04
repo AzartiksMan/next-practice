@@ -6,6 +6,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import { usePostStore } from "@/store/postStore";
+import { toast } from "sonner";
 
 interface Props {
   userId?: number;
@@ -39,7 +40,14 @@ export const CommentSection: React.FC<Props> = ({ userId }) => {
   }, [postInModal?.id]);
 
   const handleSubmit = async () => {
-    if (!newComment.trim() || !userId || !postInModal) return;
+    if (!userId) {
+      toast.error("Please log in to write a comment.");
+      return;
+    }
+
+    if (!newComment.trim() || !postInModal) {
+      return;
+    }
 
     try {
       const res = await fetch("/api/comments", {

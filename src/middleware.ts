@@ -6,10 +6,13 @@ const secret = process.env.NEXTAUTH_SECRET;
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret });
-  const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
+  const { pathname } = req.nextUrl;
+
+  const isAuthPage = pathname.startsWith("/auth");
+  const isProfilePage = pathname.startsWith("/profile");
   const isLoggedIn = !!token;
 
-  if (!isLoggedIn && !isAuthPage) {
+  if (!isLoggedIn && isProfilePage) {
     return NextResponse.redirect(new URL("/auth", req.url));
   }
 
@@ -21,5 +24,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|favicon.ico).*)"],
+  matcher: ["/profile", "/auth"],
 };

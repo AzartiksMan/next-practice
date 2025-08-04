@@ -11,10 +11,6 @@ export async function GET(
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
-  if (!currentUserId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
     const userPosts = await prisma.post.findMany({
       where: {
@@ -36,7 +32,9 @@ export async function GET(
 
     const postsWithLikeStatus = userPosts.map(({ likes, ...rest }) => ({
       ...rest,
-      isLikedByMe: likes.some((like) => like.userId === currentUserId),
+      isLikedByMe: currentUserId
+        ? likes.some((like) => like.userId === currentUserId)
+        : false,
     }));
 
     return NextResponse.json(postsWithLikeStatus);
