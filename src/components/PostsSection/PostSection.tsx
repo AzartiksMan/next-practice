@@ -15,6 +15,7 @@ export const PostSection: React.FC<Props> = ({ tabGroup, userId }) => {
   const [showPostMode, setShowPostMode] = useState<boolean>(false);
   const fetchAllPosts = usePostStore((state) => state.fetchAllPosts);
   const fetchUserPosts = usePostStore((state) => state.fetchUserPosts);
+  const setPosts = usePostStore((state) => state.setPosts);
 
   const tabOptions = getTabs(tabGroup);
 
@@ -24,7 +25,9 @@ export const PostSection: React.FC<Props> = ({ tabGroup, userId }) => {
     } else {
       fetchAllPosts(showPostMode);
     }
-  }, [showPostMode, userId, fetchUserPosts, fetchAllPosts]);
+
+    return () => setPosts([]);
+  }, [showPostMode, userId, fetchUserPosts, fetchAllPosts, setPosts]);
 
   return (
     <div className="flex flex-col bg-white p-4 rounded-xl shadow-md gap-y-3">
@@ -34,7 +37,7 @@ export const PostSection: React.FC<Props> = ({ tabGroup, userId }) => {
         onChangeMode={setShowPostMode}
       />
 
-      <PostArea />
+      <PostArea isLikesMode={showPostMode} />
     </div>
   );
 };

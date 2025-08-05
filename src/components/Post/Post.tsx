@@ -12,24 +12,20 @@ import { usePostStore } from "@/store/postStore";
 
 interface Props {
   post: PostType;
-  onDelete: (id: number) => void;
   onLikeToggle: (postId: number, isLikedByMe: boolean) => void;
-  isLiking: boolean;
   session?: Session | null;
 }
 
-export function Post({
-  post,
-  onLikeToggle,
-  onDelete,
-  isLiking,
-  session,
-}: Props) {
+export function Post({ post, onLikeToggle, session }: Props) {
   const isLikedByMe = post.isLikedByMe;
+
+  const likingPostIds = usePostStore((state) => state.likingPostIds);
+  const isLiking = likingPostIds.has(post.id);
 
   const userId = session?.user?.id;
   const isAdmin = session?.user?.role === "admin";
   const setPostInModal = usePostStore((state) => state.setPostInModal);
+  const handleDelete = usePostStore((state) => state.deletePost);
 
   return (
     <div className="rounded-xl overflow-hidden shadow-lg bg-[#c2d9dd]">
@@ -93,7 +89,7 @@ export function Post({
               <Button
                 type="button"
                 className="cursor-pointer"
-                onClick={() => onDelete(post.id)}
+                onClick={() => handleDelete(post.id)}
               >
                 Delete
               </Button>

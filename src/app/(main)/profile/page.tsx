@@ -8,6 +8,7 @@ import {
   statusSchema,
   type StatusFormData,
 } from "@/shared/validators/statusSchema";
+import { usePostStore } from "@/store/postStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -16,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function Profile() {
+  const setIsProfilePage = usePostStore((state) => state.setIsProfilePage);
   const [user, setUser] = useState<UserFullData | null>(null);
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -26,6 +28,7 @@ export default function Profile() {
   const currentUsername = session?.user?.username;
 
   useEffect(() => {
+    setIsProfilePage(true);
     const fetchData = async () => {
       try {
         const userRes = await fetch(`/api/user/byUsername/${currentUsername}`);
@@ -39,7 +42,9 @@ export default function Profile() {
     if (currentUsername) {
       fetchData();
     }
-  }, [currentUsername]);
+
+    return () => setIsProfilePage(false);
+  }, [currentUsername, setIsProfilePage]);
 
   const handleAvatarUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

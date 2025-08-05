@@ -6,17 +6,18 @@ interface PostStore {
   posts: PostType[];
   setPosts: (posts: PostType[]) => void;
   isLoading: boolean;
-  fetchAllPosts: (showMostLiked: boolean) => Promise<void>;
-  fetchUserPosts: (showOnlyLiked: boolean, userId: number) => Promise<void>;
+  fetchAllPosts: (isLikesMode: boolean) => Promise<void>;
+  fetchUserPosts: (isLikesMode: boolean, userId: number) => Promise<void>;
   deletePost: (postId: number) => Promise<void>;
+
+  isProfilePage: boolean;
+  setIsProfilePage: (value: boolean) => void;
+
   toggleLike: (
     postId: number,
     isLikedByMe: boolean,
     userId: number,
-    options?: {
-      showOnlyLiked?: boolean;
-      isCurrentUser?: boolean;
-    }
+    isLikesMode?: boolean
   ) => Promise<void>;
 
   likingPostIds: Set<number>;
@@ -36,11 +37,14 @@ export const usePostStore = create<PostStore>((set, get) => ({
   setPosts: (posts) => set({ posts }),
   isLoading: false,
   postInModal: null,
+  isProfilePage: false,
 
-  fetchAllPosts: async (showMostLiked) => {
+  setIsProfilePage: (value) => set({ isProfilePage: value }),
+
+  fetchAllPosts: async (isLikesMode) => {
     set({ posts: [], isLoading: true });
 
-    const url = showMostLiked ? "/api/posts/top" : "/api/posts";
+    const url = isLikesMode ? "/api/posts/top" : "/api/posts";
 
     try {
       const res = await fetch(url);
@@ -54,10 +58,10 @@ export const usePostStore = create<PostStore>((set, get) => ({
     }
   },
 
-  fetchUserPosts: async (showOnlyLiked, userId) => {
+  fetchUserPosts: async (isLikesMode, userId) => {
     set({ posts: [], isLoading: true });
 
-    const url = showOnlyLiked
+    const url = isLikesMode
       ? `/api/posts/userLiked/${userId}`
       : `/api/posts/userPosts/${userId}`;
 
@@ -91,12 +95,7 @@ export const usePostStore = create<PostStore>((set, get) => ({
     }
   },
 
-  toggleLike: async (
-    postId: number,
-    isLikedByMe: boolean,
-    userId: number,
-    options
-  ) => {
+  toggleLike: async (postId, isLikedByMe, userId, isLikesMode) => {
     const { likingPostIds } = get();
     if (!userId || likingPostIds.has(postId)) {
       return;
@@ -135,8 +134,9 @@ export const usePostStore = create<PostStore>((set, get) => ({
             : post
         );
 
-        const shouldRemove =
-          options?.showOnlyLiked && isLikedByMe && options.isCurrentUser;
+        const { isProfilePage } = get();
+
+        const shouldRemove = isLikesMode && isLikedByMe && isProfilePage;
 
         const finalData = shouldRemove
           ? preparedData.filter((post) => post.id !== postId)

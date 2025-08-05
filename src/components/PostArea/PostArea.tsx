@@ -7,17 +7,15 @@ import { usePostStore } from "@/store/postStore";
 import { toast } from "sonner";
 
 interface Props {
-  showOnlyLiked?: boolean;
-  isCurrentUser?: boolean;
+  isLikesMode?: boolean;
 }
 
-export function PostArea({ showOnlyLiked, isCurrentUser = false }: Props) {
-  const likingPostIds = usePostStore((state) => state.likingPostIds);
+export function PostArea({
+  isLikesMode = false,
+}: Props) {
   const isLoading = usePostStore((state) => state.isLoading);
   const posts = usePostStore((state) => state.posts);
   const postInModal = usePostStore((state) => state.postInModal);
-
-  const handleDelete = usePostStore((state) => state.deletePost);
   const toggleLike = usePostStore((state) => state.toggleLike);
 
   const { data: session } = useSession();
@@ -29,10 +27,7 @@ export function PostArea({ showOnlyLiked, isCurrentUser = false }: Props) {
       return;
     }
 
-    toggleLike(postId, isLikedByMe, userId, {
-      showOnlyLiked,
-      isCurrentUser,
-    });
+    toggleLike(postId, isLikedByMe, userId, isLikesMode);
   };
 
   return (
@@ -54,9 +49,7 @@ export function PostArea({ showOnlyLiked, isCurrentUser = false }: Props) {
               <Post
                 key={post.id}
                 post={post}
-                onDelete={handleDelete}
                 onLikeToggle={handleLikeToggle}
-                isLiking={likingPostIds.has(post.id)}
                 session={session}
               />
             ))}
