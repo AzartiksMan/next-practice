@@ -1,22 +1,27 @@
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
+  const limit = Number(searchParams.get("limit") || 10);
+
   try {
     const posts = await prisma.post.findMany({
-      orderBy: {
-        likes: {
-          _count: "desc",
-        },
-      },
+      take: limit,
+      orderBy: [{ likes: { _count: "desc" } }, { id: "desc" }],
       include: {
         user: true,
-        likes: { select: { userId: true } },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
         _count: {
           select: {
             likes: true,
@@ -26,15 +31,14 @@ export async function GET() {
       },
     });
 
+    const hasMore = false;
+
     const postsWithLikeStatus = posts.map((post) => ({
       ...post,
-      isLikedByMe: currentUserId
-        ? post.likes.some((like) => like.userId === currentUserId)
-        : false,
-      likes: undefined,
+      isLikedByMe: currentUserId ? post.likes.length > 0 : false,
     }));
 
-    return NextResponse.json(postsWithLikeStatus);
+    return NextResponse.json({ items: postsWithLikeStatus, hasMore });
   } catch (error) {
     console.error("Error fetching top posts:", error);
     return NextResponse.json(

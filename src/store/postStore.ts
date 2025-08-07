@@ -8,6 +8,8 @@ interface PostStore {
   isLoading: boolean;
   fetchAllPosts: (isLikesMode: boolean) => Promise<void>;
   fetchUserPosts: (isLikesMode: boolean, userId: number) => Promise<void>;
+  resetFeed: () => void;
+
   deletePost: (postId: number) => Promise<void>;
 
   isProfilePage: boolean;
@@ -29,6 +31,12 @@ interface PostStore {
   postInModal: PostType | null;
   setPostInModal: (post: PostType) => void;
   clearPostInModal: () => void;
+
+  currentFetchPage: number;
+  hasMoreFetch: boolean;
+  isNextPostPageFetch: boolean;
+  postFetchLimit: number;
+  topPostFetchLimit: number;
 }
 
 export const usePostStore = create<PostStore>((set, get) => ({
@@ -39,31 +47,89 @@ export const usePostStore = create<PostStore>((set, get) => ({
   postInModal: null,
   isProfilePage: false,
 
-  setIsProfilePage: (value) => set({ isProfilePage: value }),
+  currentFetchPage: 0,
+  hasMoreFetch: true,
+  isNextPostPageFetch: false,
+  postFetchLimit: 5,
+  topPostFetchLimit: 10,
+
+  resetFeed: () =>
+    set({
+      posts: [],
+      isLoading: false,
+      isNextPostPageFetch: false,
+      currentFetchPage: 0,
+      hasMoreFetch: true,
+    }),
 
   fetchAllPosts: async (isLikesMode) => {
-    set({ posts: [], isLoading: true });
+    const {
+      isNextPostPageFetch,
+      isLoading,
+      currentFetchPage,
+      hasMoreFetch,
+      postFetchLimit,
+      topPostFetchLimit,
+      posts,
+    } = get();
 
-    const url = isLikesMode ? "/api/posts/top" : "/api/posts";
+    if (!hasMoreFetch || isLoading || isNextPostPageFetch) {
+      return;
+    }
+
+    if (currentFetchPage === 0) {
+      set({ posts: [], isLoading: true });
+    } else {
+      set({ isNextPostPageFetch: true });
+    }
+
+    const nextPage = currentFetchPage + 1;
+
+    const url = isLikesMode
+      ? `/api/posts/top?limit=${topPostFetchLimit}`
+      : `/api/posts?page=${nextPage}&limit=${postFetchLimit}`;
 
     try {
       const res = await fetch(url);
-      const data = await res.json();
+      const { items, hasMore } = await res.json();
 
-      set({ posts: data });
+      set({
+        posts: nextPage === 1 ? items : [...posts, ...items],
+        hasMoreFetch: hasMore,
+        currentFetchPage: nextPage,
+      });
     } catch {
       console.log("Smth went wrong");
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, isNextPostPageFetch: false });
     }
   },
 
   fetchUserPosts: async (isLikesMode, userId) => {
-    set({ posts: [], isLoading: true });
+    const {
+      isNextPostPageFetch,
+      isLoading,
+      currentFetchPage,
+      hasMoreFetch,
+      postFetchLimit,
+      posts,
+    } = get();
+
+    if (!hasMoreFetch || isLoading || isNextPostPageFetch) {
+      return;
+    }
+
+    if (currentFetchPage === 0) {
+      set({ posts: [], isLoading: true });
+    } else {
+      set({ isNextPostPageFetch: true });
+    }
+
+    const nextPage = currentFetchPage + 1;
 
     const url = isLikesMode
-      ? `/api/posts/userLiked/${userId}`
-      : `/api/posts/userPosts/${userId}`;
+      ? `/api/posts/userLiked/${userId}?page=${nextPage}&limit=${postFetchLimit}`
+      : `/api/posts/userPosts/${userId}?page=${nextPage}&limit=${postFetchLimit}`;
 
     try {
       const res = await fetch(url);
@@ -71,11 +137,15 @@ export const usePostStore = create<PostStore>((set, get) => ({
       if (!res.ok) {
         throw new Error("Failed to fetch posts");
       }
-      const data = await res.json();
+      const { items, hasMore } = await res.json();
 
-      set({ posts: data });
+      set({
+        posts: nextPage === 1 ? items : [...posts, ...items],
+        hasMoreFetch: hasMore,
+        currentFetchPage: nextPage,
+      });
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, isNextPostPageFetch: false });
     }
   },
 
@@ -228,4 +298,6 @@ export const usePostStore = create<PostStore>((set, get) => ({
   clearPostInModal: () => set({ postInModal: null }),
 
   setPostInModal: (post) => set({ postInModal: post }),
+
+  setIsProfilePage: (value) => set({ isProfilePage: value }),
 }));

@@ -48,31 +48,42 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
+  const page = Number(searchParams.get("page") || 1);
+  const limit = Number(searchParams.get("limit") || 5);
+  const skip = (page - 1) * limit;
+
   try {
     const posts = await prisma.post.findMany({
-      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit + 1,
+      orderBy: { id: "desc" },
       include: {
         user: { select: { id: true, username: true, image: true } },
-        likes: {
-          select: { userId: true },
-        },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
         _count: { select: { comments: true, likes: true } },
       },
     });
 
-    const postsWithLikeStatus = posts.map((post) => ({
+    const hasMore = posts.length > limit;
+    const items = hasMore ? posts.slice(0, -1) : posts;
+
+    const postsWithLikeStatus = items.map((post) => ({
       ...post,
-      isLikedByMe: currentUserId
-        ? post.likes.some((like) => like.userId === currentUserId)
-        : false,
-      likes: undefined,
+      isLikedByMe: currentUserId ? post.likes.length > 0 : false,
     }));
 
-    return NextResponse.json(postsWithLikeStatus);
+    return NextResponse.json({ items: postsWithLikeStatus, hasMore });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Error" }, { status: 500 });

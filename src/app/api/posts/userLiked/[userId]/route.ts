@@ -8,8 +8,14 @@ export async function GET(
   context: { params: Promise<{ userId: string }> }
 ) {
   const { userId } = await context.params;
+  const { searchParams } = new URL(request.url);
+
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
+
+  const page = Number(searchParams.get("page") || 1);
+  const limit = Number(searchParams.get("limit") || 5);
+  const skip = (page - 1) * limit;
 
   try {
     const likedPosts = await prisma.post.findMany({
@@ -20,28 +26,34 @@ export async function GET(
           },
         },
       },
+      skip,
+      take: limit + 1,
       orderBy: { createdAt: "desc" },
       include: {
         user: {
           select: { id: true, username: true, image: true },
         },
-        likes: {
-          select: { userId: true },
-        },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
         _count: {
           select: { likes: true, comments: true },
         },
       },
     });
 
-    const postsWithLikeStatus = likedPosts.map((post) => ({
+    const hasMore = likedPosts.length > limit;
+    const items = hasMore ? likedPosts.slice(0, -1) : likedPosts;
+
+    const postsWithLikeStatus = items.map((post) => ({
       ...post,
-      isLikedByMe: currentUserId
-        ? post.likes.some((like) => like.userId === currentUserId)
-        : false,
+      isLikedByMe: currentUserId ? post.likes.length > 0 : false,
     }));
 
-    return NextResponse.json(postsWithLikeStatus);
+    return NextResponse.json({ items: postsWithLikeStatus, hasMore });
   } catch (error) {
     console.error("Failed to fetch liked posts:", error);
     return NextResponse.json(
